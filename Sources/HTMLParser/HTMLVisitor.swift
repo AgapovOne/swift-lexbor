@@ -25,6 +25,15 @@ public protocol HTMLVisitor {
     func visitBlockquote(_ element: HTMLElement) -> Result
     func visitCodeBlock(_ element: HTMLElement) -> Result
     func visitTable(_ element: HTMLElement) -> Result
+    func visitBold(_ element: HTMLElement) -> Result
+    func visitItalic(_ element: HTMLElement) -> Result
+    func visitCode(_ element: HTMLElement) -> Result
+    func visitUnderline(_ element: HTMLElement) -> Result
+    func visitStrikethrough(_ element: HTMLElement) -> Result
+    func visitSubscript(_ element: HTMLElement) -> Result
+    func visitSuperscript(_ element: HTMLElement) -> Result
+    func visitImage(_ element: HTMLElement, src: String?, alt: String?) -> Result
+    func visitLineBreak() -> Result
     func visitHorizontalRule() -> Result
     func visitText(_ text: String) -> Result
     func visitComment(_ text: String) -> Result
@@ -33,6 +42,7 @@ public protocol HTMLVisitor {
 }
 
 public extension HTMLVisitor where Result: ExpressibleByNilLiteral {
+    func visitLineBreak() -> Result { nil }
     func visitHorizontalRule() -> Result { nil }
     func visitText(_ text: String) -> Result { nil }
     func visitComment(_ text: String) -> Result { nil }
@@ -48,6 +58,14 @@ public extension HTMLVisitor {
     func visitBlockquote(_ element: HTMLElement) -> Result { visitElement(element) }
     func visitCodeBlock(_ element: HTMLElement) -> Result { visitElement(element) }
     func visitTable(_ element: HTMLElement) -> Result { visitElement(element) }
+    func visitBold(_ element: HTMLElement) -> Result { visitElement(element) }
+    func visitItalic(_ element: HTMLElement) -> Result { visitElement(element) }
+    func visitCode(_ element: HTMLElement) -> Result { visitElement(element) }
+    func visitUnderline(_ element: HTMLElement) -> Result { visitElement(element) }
+    func visitStrikethrough(_ element: HTMLElement) -> Result { visitElement(element) }
+    func visitSubscript(_ element: HTMLElement) -> Result { visitElement(element) }
+    func visitSuperscript(_ element: HTMLElement) -> Result { visitElement(element) }
+    func visitImage(_ element: HTMLElement, src: String?, alt: String?) -> Result { visitElement(element) }
 }
 
 public extension HTMLNode {
@@ -74,6 +92,15 @@ public extension HTMLNode {
             case "blockquote": return visitor.visitBlockquote(element)
             case "pre": return visitor.visitCodeBlock(element)
             case "table": return visitor.visitTable(element)
+            case "b", "strong": return visitor.visitBold(element)
+            case "i", "em": return visitor.visitItalic(element)
+            case "code": return visitor.visitCode(element)
+            case "u", "ins": return visitor.visitUnderline(element)
+            case "s", "del", "strike": return visitor.visitStrikethrough(element)
+            case "sub": return visitor.visitSubscript(element)
+            case "sup": return visitor.visitSuperscript(element)
+            case "img": return visitor.visitImage(element, src: element.attributes["src"], alt: element.attributes["alt"])
+            case "br": return visitor.visitLineBreak()
             case "hr": return visitor.visitHorizontalRule()
             default: return visitor.visitElement(element)
             }

@@ -120,6 +120,15 @@ protocol HTMLVisitor {
     func visitBlockquote(_ element: HTMLElement) -> Result
     func visitCodeBlock(_ element: HTMLElement) -> Result
     func visitTable(_ element: HTMLElement) -> Result
+    func visitBold(_ element: HTMLElement) -> Result
+    func visitItalic(_ element: HTMLElement) -> Result
+    func visitCode(_ element: HTMLElement) -> Result
+    func visitUnderline(_ element: HTMLElement) -> Result
+    func visitStrikethrough(_ element: HTMLElement) -> Result
+    func visitSubscript(_ element: HTMLElement) -> Result
+    func visitSuperscript(_ element: HTMLElement) -> Result
+    func visitImage(_ element: HTMLElement, src: String?, alt: String?) -> Result
+    func visitLineBreak() -> Result
     func visitHorizontalRule() -> Result
     func visitText(_ text: String) -> Result
     func visitComment(_ text: String) -> Result
@@ -129,14 +138,110 @@ protocol HTMLVisitor {
 
 All methods have default implementations. `visitElement` is the catch-all fallback. Semantic methods (`visitHeading`, `visitParagraph`, etc.) delegate to `visitElement` by default.
 
+Inline formatting methods: `visitBold` (`b`/`strong`), `visitItalic` (`i`/`em`), `visitCode` (`code`), `visitUnderline` (`u`/`ins`), `visitStrikethrough` (`s`/`del`/`strike`), `visitSubscript` (`sub`), `visitSuperscript` (`sup`), `visitImage` (`img`), `visitLineBreak` (`br`).
+
 </details>
+
+### Serialization
+
+```swift
+let doc = HTMLParser.parseFragment("<p>Hello <b>world</b></p>")
+let html = HTMLSerializer.serialize(doc) // "<p>Hello <b>world</b></p>"
+```
+
+Handles void elements, boolean attributes, HTML entity escaping, and sorted attributes for deterministic output.
+
+### Sequence Conformance
+
+`HTMLDocument` and `HTMLElement` conform to `Sequence`, so you can iterate directly:
+
+```swift
+let doc = HTMLParser.parseFragment("<p>one</p><p>two</p>")
+
+for node in doc {
+    if case .element(let el) = node {
+        print(el.tagName) // "p", "p"
+    }
+}
+
+// Use map, filter, first(where:), etc.
+let tags = doc.compactMap { node -> String? in
+    guard case .element(let el) = node else { return nil }
+    return el.tagName
+}
+```
+
+### Building an AttributedString Visitor
+
+Example visitor that converts HTML to `AttributedString`. Copy and customize for your needs:
+
+```swift
+import Foundation
+
+struct AttributedStringBuilder: HTMLVisitor {
+    typealias Result = AttributedString
+
+    func visitText(_ text: String) -> AttributedString {
+        AttributedString(text)
+    }
+
+    func visitElement(_ element: HTMLElement) -> AttributedString {
+        element.children.map { $0.accept(visitor: self) }.reduce(AttributedString(), +)
+    }
+
+    func visitBold(_ element: HTMLElement) -> AttributedString {
+        var result = visitElement(element)
+        result.inlinePresentationIntent = .stronglyEmphasized
+        return result
+    }
+
+    func visitItalic(_ element: HTMLElement) -> AttributedString {
+        var result = visitElement(element)
+        result.inlinePresentationIntent = .emphasized
+        return result
+    }
+
+    func visitCode(_ element: HTMLElement) -> AttributedString {
+        var result = visitElement(element)
+        result.inlinePresentationIntent = .code
+        return result
+    }
+
+    func visitStrikethrough(_ element: HTMLElement) -> AttributedString {
+        var result = visitElement(element)
+        result.strikethroughStyle = .single
+        return result
+    }
+
+    func visitLink(_ element: HTMLElement, href: String?) -> AttributedString {
+        var result = visitElement(element)
+        if let href, let url = URL(string: href) {
+            result.link = url
+        }
+        return result
+    }
+
+    func visitLineBreak() -> AttributedString {
+        AttributedString("\n")
+    }
+
+    func visitParagraph(_ element: HTMLElement) -> AttributedString {
+        visitElement(element) + AttributedString("\n\n")
+    }
+}
+
+// Usage:
+let doc = HTMLParser.parseFragment("<p>Hello <b>world</b> and <a href=\"https://example.com\">link</a></p>")
+let builder = AttributedStringBuilder()
+let attributed = doc.children.map { $0.accept(visitor: builder) }.reduce(AttributedString(), +)
+```
 
 ### Parser Behavior
 
 - `script`, `style`, `template` tags are skipped
 - HTML entities are decoded (`&amp;` -> `&`)
 - Invalid HTML is handled via lexbor's error recovery
-- Boolean attributes get their name as value (`disabled` -> `"disabled"`)
+- Boolean attributes have empty string value (`disabled` -> `""`). Use `hasAttribute(_:)` to check presence.
 
 ## Benchmarks
 

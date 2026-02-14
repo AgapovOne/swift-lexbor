@@ -85,7 +85,8 @@ import Testing
         return
     }
     #expect(input.tagName == "input")
-    #expect(input.attributes["disabled"] == "disabled")
+    #expect(input.attributes["disabled"] == "")
+    #expect(input.hasAttribute("disabled"))
 }
 
 @Test func parseEmptyValueAttributeDistinctFromBoolean() {
@@ -98,7 +99,7 @@ import Testing
     }
     #expect(input.tagName == "input")
     #expect(input.attributes["value"] == "")
-    #expect(input.attributes["disabled"] == "disabled")
+    #expect(input.attributes["disabled"] == "")
 }
 
 @Test func parseFragmentHeadings() {
@@ -605,6 +606,241 @@ import Testing
     }
     #expect(first.textContent == "Item 1")
     #expect(last.textContent == "Item 100")
+}
+
+// MARK: - Inline Formatting Visitor Tests
+
+@Test func visitorDispatchesBoldTags() {
+    struct BoldCollector: HTMLVisitor {
+        func visitBold(_ element: HTMLElement) -> String? { element.textContent }
+        func visitElement(_ element: HTMLElement) -> String? {
+            element.children.compactMap { $0.accept(visitor: self) }.joined()
+        }
+        func visitText(_ text: String) -> String? { nil }
+    }
+
+    let doc = HTMLParser.parseFragment("<p><b>bold</b> and <strong>strong</strong></p>")
+    let results = doc.accept(visitor: BoldCollector()).compactMap { $0 }
+    #expect(results == ["boldstrong"])
+}
+
+@Test func visitorDispatchesItalicTags() {
+    struct ItalicCollector: HTMLVisitor {
+        func visitItalic(_ element: HTMLElement) -> String? { element.textContent }
+        func visitElement(_ element: HTMLElement) -> String? {
+            let result = element.children.compactMap { $0.accept(visitor: self) }.joined()
+            return result.isEmpty ? nil : result
+        }
+        func visitText(_ text: String) -> String? { nil }
+    }
+
+    let doc = HTMLParser.parseFragment("<i>italic</i><em>emphasis</em>")
+    let results = doc.accept(visitor: ItalicCollector()).compactMap { $0 }
+    #expect(results == ["italic", "emphasis"])
+}
+
+@Test func visitorDispatchesInlineCode() {
+    struct CodeCollector: HTMLVisitor {
+        func visitCode(_ element: HTMLElement) -> String? { element.textContent }
+        func visitElement(_ element: HTMLElement) -> String? {
+            element.children.compactMap { $0.accept(visitor: self) }.first
+        }
+        func visitText(_ text: String) -> String? { nil }
+    }
+
+    let doc = HTMLParser.parseFragment("<p>Use <code>foo()</code> here</p>")
+    let results = doc.accept(visitor: CodeCollector()).compactMap { $0 }
+    #expect(results == ["foo()"])
+}
+
+@Test func visitorDispatchesStrikethroughTags() {
+    struct StrikeCollector: HTMLVisitor {
+        func visitStrikethrough(_ element: HTMLElement) -> String? { element.textContent }
+        func visitElement(_ element: HTMLElement) -> String? {
+            let result = element.children.compactMap { $0.accept(visitor: self) }.joined()
+            return result.isEmpty ? nil : result
+        }
+        func visitText(_ text: String) -> String? { nil }
+    }
+
+    let doc = HTMLParser.parseFragment("<s>s</s><del>del</del><strike>strike</strike>")
+    let results = doc.accept(visitor: StrikeCollector()).compactMap { $0 }
+    #expect(results == ["s", "del", "strike"])
+}
+
+@Test func visitorDispatchesUnderlineTags() {
+    struct UnderlineCollector: HTMLVisitor {
+        func visitUnderline(_ element: HTMLElement) -> String? { element.textContent }
+        func visitElement(_ element: HTMLElement) -> String? {
+            let result = element.children.compactMap { $0.accept(visitor: self) }.joined()
+            return result.isEmpty ? nil : result
+        }
+        func visitText(_ text: String) -> String? { nil }
+    }
+
+    let doc = HTMLParser.parseFragment("<u>underline</u><ins>inserted</ins>")
+    let results = doc.accept(visitor: UnderlineCollector()).compactMap { $0 }
+    #expect(results == ["underline", "inserted"])
+}
+
+@Test func visitorDispatchesSubSup() {
+    struct SubSupCollector: HTMLVisitor {
+        func visitSubscript(_ element: HTMLElement) -> String? { "sub:\(element.textContent)" }
+        func visitSuperscript(_ element: HTMLElement) -> String? { "sup:\(element.textContent)" }
+        func visitElement(_ element: HTMLElement) -> String? {
+            element.children.compactMap { $0.accept(visitor: self) }.joined(separator: ",")
+        }
+        func visitText(_ text: String) -> String? { nil }
+    }
+
+    let doc = HTMLParser.parseFragment("<p>H<sub>2</sub>O x<sup>2</sup></p>")
+    let results = doc.accept(visitor: SubSupCollector()).compactMap { $0 }.filter { !$0.isEmpty }
+    #expect(results == ["sub:2,sup:2"])
+}
+
+@Test func visitorDispatchesImage() {
+    struct ImageCollector: HTMLVisitor {
+        func visitImage(_ element: HTMLElement, src: String?, alt: String?) -> String? {
+            "img:\(src ?? "nil"):\(alt ?? "nil")"
+        }
+        func visitElement(_ element: HTMLElement) -> String? {
+            element.children.compactMap { $0.accept(visitor: self) }.first
+        }
+        func visitText(_ text: String) -> String? { nil }
+    }
+
+    let doc = HTMLParser.parseFragment("<img src=\"photo.jpg\" alt=\"A photo\">")
+    let results = doc.accept(visitor: ImageCollector()).compactMap { $0 }
+    #expect(results == ["img:photo.jpg:A photo"])
+}
+
+@Test func visitorDispatchesLineBreak() {
+    struct BrCollector: HTMLVisitor {
+        func visitLineBreak() -> Int? { 1 }
+        func visitElement(_ element: HTMLElement) -> Int? {
+            element.children.compactMap { $0.accept(visitor: self) }.reduce(0, +)
+        }
+        func visitText(_ text: String) -> Int? { nil }
+    }
+
+    let doc = HTMLParser.parseFragment("<p>line1<br>line2<br>line3</p>")
+    let count = doc.accept(visitor: BrCollector()).compactMap { $0 }.reduce(0, +)
+    #expect(count == 2)
+}
+
+// MARK: - Sequence Conformance Tests
+
+@Test func documentSequenceConformance() {
+    let doc = HTMLParser.parseFragment("<p>one</p><p>two</p><p>three</p>")
+
+    let tags = doc.compactMap { node -> String? in
+        guard case .element(let el) = node else { return nil }
+        return el.tagName
+    }
+    #expect(tags == ["p", "p", "p"])
+}
+
+@Test func elementSequenceConformance() {
+    let doc = HTMLParser.parseFragment("<ul><li>a</li><li>b</li></ul>")
+
+    guard case .element(let ul) = doc.children.first else {
+        Issue.record("Expected ul element")
+        return
+    }
+
+    let items = ul.compactMap { node -> String? in
+        guard case .element(let li) = node else { return nil }
+        return li.textContent
+    }
+    #expect(items == ["a", "b"])
+}
+
+// MARK: - hasAttribute Tests
+
+@Test func hasAttributeReturnsTrueForBooleanAttribute() {
+    let doc = HTMLParser.parseFragment("<input disabled>")
+    guard case .element(let input) = doc.children.first else {
+        Issue.record("Expected input element")
+        return
+    }
+    #expect(input.hasAttribute("disabled"))
+    #expect(!input.hasAttribute("readonly"))
+}
+
+@Test func hasAttributeReturnsTrueForValueAttribute() {
+    let doc = HTMLParser.parseFragment("<a href=\"/\">link</a>")
+    guard case .element(let a) = doc.children.first else {
+        Issue.record("Expected a element")
+        return
+    }
+    #expect(a.hasAttribute("href"))
+    #expect(!a.hasAttribute("target"))
+}
+
+// MARK: - Serializer Tests
+
+@Test func serializeSimpleParagraph() {
+    let doc = HTMLParser.parseFragment("<p>Hello</p>")
+    let html = HTMLSerializer.serialize(doc)
+    #expect(html == "<p>Hello</p>")
+}
+
+@Test func serializeNestedElements() {
+    let doc = HTMLParser.parseFragment("<p>Hello <b>world</b></p>")
+    let html = HTMLSerializer.serialize(doc)
+    #expect(html == "<p>Hello <b>world</b></p>")
+}
+
+@Test func serializeVoidElements() {
+    let doc = HTMLParser.parseFragment("<br><hr>")
+    let html = HTMLSerializer.serialize(doc)
+    #expect(html == "<br><hr>")
+}
+
+@Test func serializeAttributes() {
+    let doc = HTMLParser.parseFragment("<a href=\"/page\" class=\"link\">text</a>")
+    let html = HTMLSerializer.serialize(doc)
+    #expect(html == "<a class=\"link\" href=\"/page\">text</a>")
+}
+
+@Test func serializeBooleanAttributes() {
+    let doc = HTMLParser.parseFragment("<input disabled>")
+    let html = HTMLSerializer.serialize(doc)
+    #expect(html == "<input disabled>")
+}
+
+@Test func serializeEscapesHtmlEntities() {
+    let element = HTMLElement(tagName: "p", children: [.text("1 < 2 & 3 > 0")])
+    let doc = HTMLDocument(children: [.element(element)])
+    let html = HTMLSerializer.serialize(doc)
+    #expect(html == "<p>1 &lt; 2 &amp; 3 &gt; 0</p>")
+}
+
+@Test func serializeEscapesAttributeQuotes() {
+    let element = HTMLElement(tagName: "div", attributes: ["title": "say \"hello\""])
+    let doc = HTMLDocument(children: [.element(element)])
+    let html = HTMLSerializer.serialize(doc)
+    #expect(html == "<div title=\"say &quot;hello&quot;\"></div>")
+}
+
+@Test func serializeComment() {
+    let doc = HTMLDocument(children: [.comment(" a comment ")])
+    let html = HTMLSerializer.serialize(doc)
+    #expect(html == "<!-- a comment -->")
+}
+
+@Test func serializeRoundtrip() {
+    let input = "<div><p>Hello <b>bold</b> and <i>italic</i></p><ul><li>one</li><li>two</li></ul></div>"
+    let doc1 = HTMLParser.parseFragment(input)
+    let html = HTMLSerializer.serialize(doc1)
+    let doc2 = HTMLParser.parseFragment(html)
+    #expect(doc1 == doc2)
+}
+
+@Test func serializeImgWithAttributes() {
+    let doc = HTMLParser.parseFragment("<img src=\"photo.jpg\" alt=\"A photo\">")
+    let html = HTMLSerializer.serialize(doc)
+    #expect(html == "<img alt=\"A photo\" src=\"photo.jpg\">")
 }
 
 @Test func parseManyAttributes() {

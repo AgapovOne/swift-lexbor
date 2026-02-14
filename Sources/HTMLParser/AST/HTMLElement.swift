@@ -20,6 +20,13 @@ public struct HTMLElement: Equatable, Hashable, Sendable {
         self.children = children
     }
 
+    /// Returns `true` if the attribute is present, regardless of its value.
+    ///
+    /// Useful for boolean attributes like `disabled`, `checked`, `readonly`.
+    public func hasAttribute(_ name: String) -> Bool {
+        attributes[name] != nil
+    }
+
     /// Concatenated text content of all descendant text nodes.
     public var textContent: String {
         children.map { node in

@@ -281,7 +281,7 @@ enum LexborConverter {
                 if let vp = valuePtr {
                     value = valueLen > 0 ? makeString(vp, valueLen) : ""
                 } else {
-                    value = name // boolean attribute: disabled → "disabled"
+                    value = "" // boolean attribute: disabled → ""
                 }
 
                 attributes[name] = value
