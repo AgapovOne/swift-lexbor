@@ -82,9 +82,18 @@ func benchmarkSwiftSoup(html: String, docName: String) -> BenchmarkResult {
 #if canImport(AppKit)
 import AppKit
 
+struct SilentXMLStyler: XMLStyler {
+    func style(forElement name: String, attributes: [String: String], currentStyle: BonMot.StringStyle) -> BonMot.StringStyle? {
+        BonMot.StringStyle()
+    }
+    func prefix(forElement name: String, attributes: [String: String]) -> Composable? { nil }
+    func suffix(forElement name: String) -> Composable? { nil }
+}
+
 func benchmarkBonMot(xml: String, docName: String) -> BenchmarkResult {
-    benchmark(name: "BonMot", document: docName) {
-        _ = xml.styled(with: StringStyle())
+    let styler = SilentXMLStyler()
+    return benchmark(name: "BonMot", document: docName) {
+        _ = try? NSAttributedString.composed(ofXML: xml, styler: styler)
     }
 }
 
