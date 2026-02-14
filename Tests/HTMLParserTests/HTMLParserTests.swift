@@ -391,3 +391,238 @@ import Testing
 
     #expect(doc1.hashValue == doc2.hashValue)
 }
+
+// MARK: - Optimization Safety Tests
+
+@Test func parseAllStandardTags() {
+    // Standalone tags — can be parsed as fragments directly
+    let tags = [
+        "div", "span", "p", "a", "b", "i", "u", "s", "em", "strong",
+        "code", "pre", "blockquote", "q", "cite",
+        "ul", "ol", "li", "dl", "dt", "dd",
+        "table",
+        "form", "input", "button", "select", "option", "textarea", "label",
+        "header", "footer", "nav", "main", "article", "section", "aside",
+        "figure", "figcaption", "details", "summary",
+        "h1", "h2", "h3", "h4", "h5", "h6",
+        "img", "br", "hr", "area", "source", "track", "embed",
+        "video", "audio", "canvas", "picture",
+        "mark", "small", "sub", "sup", "kbd", "samp", "var",
+        "abbr", "time", "data", "meter", "progress", "output",
+        "ruby", "rt", "rp", "bdi", "bdo", "wbr",
+        "map", "object", "iframe", "dialog", "menu", "slot",
+    ]
+
+    let voidTags: Set<String> = [
+        "img", "br", "hr", "input", "area", "source",
+        "track", "embed", "wbr",
+    ]
+
+    for tag in tags {
+        let html = voidTags.contains(tag)
+            ? "<\(tag)>"
+            : "<\(tag)>content</\(tag)>"
+        let doc = HTMLParser.parseFragment(html)
+
+        guard case .element(let el) = doc.children.first(where: {
+            if case .element(let e) = $0 { return e.tagName == tag }
+            return false
+        }) else {
+            Issue.record("Tag '\(tag)' not found in parsed output")
+            continue
+        }
+        #expect(el.tagName == tag)
+    }
+
+    // Table-child tags require <table> context per HTML spec
+    let tableChildren: [(tag: String, html: String, path: [String])] = [
+        ("caption", "<table><caption>text</caption></table>", ["table", "caption"]),
+        ("thead", "<table><thead><tr><th>h</th></tr></thead></table>", ["table", "thead"]),
+        ("tbody", "<table><tbody><tr><td>c</td></tr></tbody></table>", ["table", "tbody"]),
+        ("tfoot", "<table><tfoot><tr><td>f</td></tr></tfoot></table>", ["table", "tfoot"]),
+        ("tr", "<table><tr><td>c</td></tr></table>", ["table", "tbody", "tr"]),
+        ("th", "<table><tr><th>h</th></tr></table>", ["table", "tbody", "tr", "th"]),
+        ("td", "<table><tr><td>c</td></tr></table>", ["table", "tbody", "tr", "td"]),
+    ]
+
+    for (tag, html, path) in tableChildren {
+        let doc = HTMLParser.parseFragment(html)
+        var node: HTMLNode? = doc.children.first
+        for step in path {
+            guard case .element(let el) = node else {
+                Issue.record("Expected '\(step)' in path for tag '\(tag)'")
+                break
+            }
+            #expect(el.tagName == step)
+            node = el.children.first
+        }
+    }
+}
+
+@Test func parseCustomElement() {
+    let doc = HTMLParser.parseFragment(
+        "<my-widget data-id=\"42\"><x-button>Click</x-button></my-widget>"
+    )
+
+    #expect(doc.children.count == 1)
+    guard case .element(let widget) = doc.children[0] else {
+        Issue.record("Expected my-widget element")
+        return
+    }
+    #expect(widget.tagName == "my-widget")
+    #expect(widget.attributes["data-id"] == "42")
+    #expect(widget.children.count == 1)
+
+    guard case .element(let button) = widget.children[0] else {
+        Issue.record("Expected x-button element")
+        return
+    }
+    #expect(button.tagName == "x-button")
+    #expect(button.textContent == "Click")
+}
+
+@Test func parseTemplateSkipped() {
+    let doc = HTMLParser.parseFragment(
+        "<div><template><p>hidden</p></template><p>visible</p></div>"
+    )
+
+    #expect(doc.children.count == 1)
+    guard case .element(let div) = doc.children[0] else {
+        Issue.record("Expected div element")
+        return
+    }
+    // template should be filtered out, only <p>visible</p> remains
+    #expect(div.children.count == 1)
+    guard case .element(let p) = div.children[0] else {
+        Issue.record("Expected p element")
+        return
+    }
+    #expect(p.tagName == "p")
+    #expect(p.textContent == "visible")
+}
+
+@Test func parseUnicodeContent() {
+    let doc = HTMLParser.parseFragment(
+        "<p lang=\"ru\" data-emoji=\"🌍\">Привет мир! 你好世界 🎉</p>"
+    )
+
+    #expect(doc.children.count == 1)
+    guard case .element(let p) = doc.children[0] else {
+        Issue.record("Expected p element")
+        return
+    }
+    #expect(p.tagName == "p")
+    #expect(p.attributes["lang"] == "ru")
+    #expect(p.attributes["data-emoji"] == "🌍")
+    guard case .text(let text) = p.children[0] else {
+        Issue.record("Expected text node")
+        return
+    }
+    #expect(text == "Привет мир! 你好世界 🎉")
+}
+
+@Test func parseLargeDocument() {
+    var html = "<div>"
+    for i in 1...500 {
+        html += "<p class=\"item\">Paragraph \(i) with <b>bold</b> and <a href=\"#\(i)\">link</a></p>"
+    }
+    html += "</div>"
+
+    let doc = HTMLParser.parseFragment(html)
+
+    #expect(doc.children.count == 1)
+    guard case .element(let div) = doc.children[0] else {
+        Issue.record("Expected div element")
+        return
+    }
+    #expect(div.children.count == 500)
+
+    // Spot-check first and last
+    guard case .element(let first) = div.children[0] else {
+        Issue.record("Expected first p element")
+        return
+    }
+    #expect(first.tagName == "p")
+    #expect(first.attributes["class"] == "item")
+
+    guard case .element(let last) = div.children[499] else {
+        Issue.record("Expected last p element")
+        return
+    }
+    #expect(last.tagName == "p")
+    #expect(last.textContent.contains("500"))
+}
+
+@Test func parseDeeplyNested() {
+    let depth = 50
+    let opening = (1...depth).map { _ in "<div>" }.joined()
+    let closing = (1...depth).map { _ in "</div>" }.joined()
+    let html = "\(opening)<p>deep</p>\(closing)"
+
+    let doc = HTMLParser.parseFragment(html)
+
+    // Walk down to the innermost element
+    var current = doc.children.first
+    for level in 0..<depth {
+        guard case .element(let el) = current else {
+            Issue.record("Expected element at level \(level)")
+            return
+        }
+        #expect(el.tagName == "div")
+        current = el.children.first
+    }
+
+    // The innermost should be <p>deep</p>
+    guard case .element(let p) = current else {
+        Issue.record("Expected p element at bottom")
+        return
+    }
+    #expect(p.tagName == "p")
+    #expect(p.textContent == "deep")
+}
+
+@Test func parseManySiblings() {
+    var html = "<ul>"
+    for i in 1...100 {
+        html += "<li>Item \(i)</li>"
+    }
+    html += "</ul>"
+
+    let doc = HTMLParser.parseFragment(html)
+
+    guard case .element(let ul) = doc.children[0] else {
+        Issue.record("Expected ul element")
+        return
+    }
+    #expect(ul.tagName == "ul")
+    #expect(ul.children.count == 100)
+
+    // Spot-check boundaries
+    guard case .element(let first) = ul.children[0],
+          case .element(let last) = ul.children[99] else {
+        Issue.record("Expected li elements")
+        return
+    }
+    #expect(first.textContent == "Item 1")
+    #expect(last.textContent == "Item 100")
+}
+
+@Test func parseManyAttributes() {
+    let attrs = (1...12).map { "data-attr\($0)=\"value\($0)\"" }.joined(separator: " ")
+    let html = "<div id=\"main\" class=\"container\" \(attrs)>content</div>"
+
+    let doc = HTMLParser.parseFragment(html)
+
+    guard case .element(let div) = doc.children[0] else {
+        Issue.record("Expected div element")
+        return
+    }
+    #expect(div.tagName == "div")
+    #expect(div.attributes.count == 14) // id + class + 12 data attributes
+    #expect(div.attributes["id"] == "main")
+    #expect(div.attributes["class"] == "container")
+    for i in 1...12 {
+        #expect(div.attributes["data-attr\(i)"] == "value\(i)")
+    }
+    #expect(div.textContent == "content")
+}

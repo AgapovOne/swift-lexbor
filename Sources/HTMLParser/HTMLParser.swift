@@ -10,8 +10,9 @@ public enum HTMLParser {
         }
         defer { _ = lxb_html_document_destroy(doc) }
 
-        let bytes = Array(html.utf8)
-        let status = bytes.withUnsafeBufferPointer { buffer in
+        // withUTF8 gives direct pointer to String's internal storage, avoids copying into [UInt8]
+        var html = html
+        let status = html.withUTF8 { buffer in
             lxb_html_document_parse(doc, buffer.baseAddress, buffer.count)
         }
         guard status == LXB_STATUS_OK.rawValue else {
@@ -30,10 +31,7 @@ public enum HTMLParser {
         defer { _ = lxb_html_document_destroy(doc) }
 
         // Parse empty doc to initialize body element as context
-        let empty: [UInt8] = []
-        let emptyStatus = empty.withUnsafeBufferPointer { buffer in
-            lxb_html_document_parse(doc, buffer.baseAddress, 0)
-        }
+        let emptyStatus = lxb_html_document_parse(doc, nil, 0)
         guard emptyStatus == LXB_STATUS_OK.rawValue else {
             return HTMLDocument()
         }
@@ -44,8 +42,9 @@ public enum HTMLParser {
         let bodyElement = UnsafeMutableRawPointer(body)
             .assumingMemoryBound(to: lxb_dom_element_t.self)
 
-        let bytes = Array(html.utf8)
-        guard let fragmentRoot = bytes.withUnsafeBufferPointer({ buffer in
+        // withUTF8 gives direct pointer to String's internal storage, avoids copying into [UInt8]
+        var html = html
+        guard let fragmentRoot = html.withUTF8({ buffer in
             lxb_html_document_parse_fragment(doc, bodyElement, buffer.baseAddress, buffer.count)
         }) else {
             return HTMLDocument()
