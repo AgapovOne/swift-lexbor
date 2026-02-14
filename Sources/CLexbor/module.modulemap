@@ -1,0 +1,4 @@
+module CLexbor {
+    header "CLexbor.h"
+    export *
+}
