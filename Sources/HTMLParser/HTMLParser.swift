@@ -1,6 +1,20 @@
 import CLexbor
 
+/// Fast HTML5 parser built on lexbor.
+///
+/// Parses HTML strings into an immutable AST of ``HTMLDocument``, ``HTMLNode``, and ``HTMLElement``.
+/// Tags `script`, `style`, and `template` are filtered out during parsing.
+///
+/// ```swift
+/// let doc = HTMLParser.parse("<html><body><p>Hello</p></body></html>")
+/// let fragment = HTMLParser.parseFragment("<p>Hello</p>")
+/// ```
 public enum HTMLParser {
+    /// Parses a complete HTML document including `<html>`, `<head>`, and `<body>` wrappers.
+    ///
+    /// Returns an empty ``HTMLDocument`` if the input is empty or parsing fails.
+    /// - Parameter html: HTML string to parse.
+    /// - Returns: Parsed document tree.
     public static func parse(_ html: String) -> HTMLDocument {
         guard !html.isEmpty else {
             return HTMLDocument()
@@ -21,6 +35,12 @@ public enum HTMLParser {
         return LexborConverter.convert(doc)
     }
 
+    /// Parses an HTML fragment without adding `<html>`, `<head>`, `<body>` wrappers.
+    ///
+    /// Use this for parsing partial HTML like rich text content or user input.
+    /// Returns an empty ``HTMLDocument`` if the input is empty or parsing fails.
+    /// - Parameter html: HTML fragment string to parse.
+    /// - Returns: Parsed document tree containing only the fragment nodes.
     public static func parseFragment(_ html: String) -> HTMLDocument {
         guard !html.isEmpty else {
             return HTMLDocument()

@@ -1,3 +1,19 @@
+/// Visitor protocol for traversing an HTML tree with semantic dispatch.
+///
+/// Implement only the methods you need — all methods have default implementations
+/// that delegate to ``visitElement(_:)`` (for element nodes) or return `nil`
+/// (when `Result` is `ExpressibleByNilLiteral`).
+///
+/// Use ``HTMLNode/accept(visitor:)`` or ``HTMLDocument/accept(visitor:)`` to apply the visitor.
+///
+/// ```swift
+/// struct TextCollector: HTMLVisitor {
+///     func visitText(_ text: String) -> String? { text }
+///     func visitElement(_ element: HTMLElement) -> String? {
+///         element.children.compactMap { $0.accept(visitor: self) }.joined()
+///     }
+/// }
+/// ```
 public protocol HTMLVisitor {
     associatedtype Result
 
@@ -12,6 +28,7 @@ public protocol HTMLVisitor {
     func visitHorizontalRule() -> Result
     func visitText(_ text: String) -> Result
     func visitComment(_ text: String) -> Result
+    /// Fallback for elements without a dedicated visit method.
     func visitElement(_ element: HTMLElement) -> Result
 }
 
@@ -34,6 +51,7 @@ public extension HTMLVisitor {
 }
 
 public extension HTMLNode {
+    /// Dispatches this node to the appropriate visitor method based on its type and tag name.
     func accept<V: HTMLVisitor>(visitor: V) -> V.Result {
         switch self {
         case .text(let text):
@@ -64,6 +82,7 @@ public extension HTMLNode {
 }
 
 public extension HTMLDocument {
+    /// Applies the visitor to each top-level child node and returns the results.
     func accept<V: HTMLVisitor>(visitor: V) -> [V.Result] {
         children.map { $0.accept(visitor: visitor) }
     }
