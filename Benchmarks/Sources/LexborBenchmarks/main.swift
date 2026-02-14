@@ -128,6 +128,14 @@ func formatTime(_ seconds: Double) -> String {
     }
 }
 
+func formatSize(_ bytes: Int) -> String {
+    if bytes < 1024 {
+        return "\(bytes) bytes"
+    } else {
+        return String(format: "%.1f KB", Double(bytes) / 1024.0)
+    }
+}
+
 func printResults(_ results: [BenchmarkResult]) {
     let nameWidth = results.map(\.name.count).max() ?? 20
     let colWidth = 12
@@ -149,6 +157,143 @@ func printResults(_ results: [BenchmarkResult]) {
     }
 }
 
+// MARK: - README Generation
+
+#if swift(>=6.2)
+private let swiftVersionString = "Swift 6.2"
+#elseif swift(>=6.1)
+private let swiftVersionString = "Swift 6.1"
+#elseif swift(>=6.0)
+private let swiftVersionString = "Swift 6.0"
+#else
+private let swiftVersionString = "Swift 5"
+#endif
+
+func chipName() -> String {
+    var size = 0
+    sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
+    guard size > 0 else { return "Unknown" }
+    var result = [UInt8](repeating: 0, count: size)
+    sysctlbyname("machdep.cpu.brand_string", &result, &size, nil, 0)
+    if let nullIndex = result.firstIndex(of: 0) {
+        result = Array(result[..<nullIndex])
+    }
+    return String(decoding: result, as: UTF8.self)
+}
+
+func generateReadme(documentResults: [(doc: DocumentSet, sizeBytes: Int, results: [BenchmarkResult])]) -> String {
+    let osVersion = ProcessInfo.processInfo.operatingSystemVersion
+    let machineInfo = "\(chipName()), macOS \(osVersion.majorVersion).\(osVersion.minorVersion), \(swiftVersionString), release build"
+
+    var md = """
+        # Benchmarks
+
+        HTML parsing benchmarks comparing swift-lexbor against other Swift HTML parsers.
+
+        ## Run
+
+        ```bash
+        swift run --package-path Benchmarks -c release
+        ```
+
+        ## Competitors
+
+        | Parser | Description |
+        |--------|-------------|
+        | **HTMLParser** | swift-lexbor Swift wrapper (parse + AST conversion) |
+        | **Raw CLexbor** | Direct lexbor C API call (parse only, no AST) |
+        | **SwiftSoup** | Pure Swift HTML parser (JSoup port) |
+        | **BonMot** | XMLParser-based attributed string builder |
+        | **JustHTML** | Pure Swift HTML5-compliant parser |
+        | **NSAttributedString** | System HTML parser (AppKit, macOS only) |
+
+        > BonMot uses Foundation's XMLParser under the hood. It receives XML-equivalent documents (same structure, self-closing void tags, no HTML entities). Other parsers receive identical HTML input.
+
+        ## Results
+
+        \(machineInfo). 100 iterations, 10 warmup.
+
+        """
+
+    for (doc, sizeBytes, results) in documentResults {
+        let cleanName = doc.name.components(separatedBy: " (").first ?? doc.name
+        md += "\n### \(cleanName) — \(formatSize(sizeBytes))\n\n"
+        md += "| Parser | Average | Median | P95 |\n"
+        md += "|--------|---------|--------|-----|\n"
+
+        let sorted = results.sorted { $0.median < $1.median }
+        for result in sorted {
+            md += "| \(result.name) | \(formatTime(result.average)) | \(formatTime(result.median)) | \(formatTime(result.p95)) |\n"
+        }
+    }
+
+    // Summary based on the largest document
+    if let (_, sizeBytes, results) = documentResults.last {
+        if let htmlParser = results.first(where: { $0.name == "HTMLParser" }),
+           let rawCLexbor = results.first(where: { $0.name == "Raw CLexbor" }) {
+
+            let sizeKB = Int(round(Double(sizeBytes) / 1024.0))
+            let astOverhead = Int(round(htmlParser.median / rawCLexbor.median))
+
+            var comparisons: [String] = []
+
+            let competitors = results.filter { ["SwiftSoup", "JustHTML", "BonMot"].contains($0.name) }
+            if !competitors.isEmpty {
+                let fastest = competitors.min(by: { $0.median < $1.median })!
+                let ratio = Int(round(fastest.median / htmlParser.median))
+                let names = competitors.sorted(by: { $0.median < $1.median }).map(\.name).joined(separator: "/")
+                comparisons.append("**\(ratio)x faster** than \(names)")
+            }
+
+            if let nsAttr = results.first(where: { $0.name == "NSAttributedString" }) {
+                let ratio = Int(round(nsAttr.median / htmlParser.median))
+                comparisons.append("**\(ratio)x faster** than NSAttributedString")
+            }
+
+            let article = [8, 11, 18].contains(sizeKB) || (80...89).contains(sizeKB) ? "an" : "a"
+
+            md += "\n### Summary\n\n"
+            md += "On \(article) \(sizeKB) KB document, HTMLParser (lexbor) parses in **\(formatTime(htmlParser.median))**"
+            if !comparisons.isEmpty {
+                md += " — " + comparisons.joined(separator: " and ")
+            }
+            md += ". Raw C API overhead for Swift AST conversion is ~\(astOverhead)x.\n"
+        }
+    }
+
+    md += """
+
+        ## Methodology
+
+        - **Warmup**: 10 iterations (discarded)
+        - **Measured**: 100 iterations
+        - **Metrics**: average, median, P95
+        - **Build**: release mode (`-c release`)
+        - **Documents**: synthetic HTML — small (<1KB), medium (1-10KB), large (50+KB)
+
+        """
+
+    return md
+}
+
+func updateReadme(documentResults: [(doc: DocumentSet, sizeBytes: Int, results: [BenchmarkResult])]) {
+    let sourceFile = #filePath
+    let benchmarksDir = URL(fileURLWithPath: sourceFile)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+    let readmePath = benchmarksDir.appendingPathComponent("README.md").path
+
+    let content = generateReadme(documentResults: documentResults)
+
+    do {
+        try content.write(toFile: readmePath, atomically: true, encoding: .utf8)
+        print("Updated \(readmePath)")
+    } catch {
+        print("Failed to update README.md: \(error)")
+    }
+}
+
 // MARK: - Main
 
 struct DocumentSet {
@@ -166,6 +311,8 @@ let documents: [DocumentSet] = [
 print("HTML Parser Benchmarks")
 print("======================")
 print("Iterations: 100, Warmup: 10\n")
+
+var allDocumentResults: [(doc: DocumentSet, sizeBytes: Int, results: [BenchmarkResult])] = []
 
 for doc in documents {
     let sizeBytes = doc.html.utf8.count
@@ -185,6 +332,9 @@ for doc in documents {
     #endif
 
     printResults(results)
+    allDocumentResults.append((doc: doc, sizeBytes: sizeBytes, results: results))
 }
 
-print("\n\nDone.")
+print("\n\nDone.\n")
+
+updateReadme(documentResults: allDocumentResults)

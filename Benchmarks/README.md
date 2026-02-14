@@ -23,44 +23,44 @@ swift run --package-path Benchmarks -c release
 
 ## Results
 
-Apple M4 Pro, macOS 15.3, Swift 6.2, release build. 100 iterations, 10 warmup.
+Apple M4 Max, macOS 26.2, Swift 6.2, release build. 100 iterations, 10 warmup.
 
 ### Small — 220 bytes
 
 | Parser | Average | Median | P95 |
 |--------|---------|--------|-----|
-| Raw CLexbor | 12.7 µs | 12.7 µs | 13.1 µs |
-| HTMLParser | 16.4 µs | 16.2 µs | 18.0 µs |
-| JustHTML | 22.6 µs | 19.7 µs | 30.6 µs |
-| BonMot | 50.9 µs | 48.1 µs | 60.4 µs |
-| SwiftSoup | 61.5 µs | 57.9 µs | 70.0 µs |
-| NSAttributedString | 1.62 ms | 1.62 ms | 1.83 ms |
+| Raw CLexbor | 13.0 µs | 12.9 µs | 13.4 µs |
+| HTMLParser | 15.0 µs | 14.9 µs | 16.8 µs |
+| JustHTML | 27.1 µs | 29.7 µs | 33.8 µs |
+| BonMot | 52.7 µs | 53.5 µs | 59.1 µs |
+| SwiftSoup | 59.7 µs | 56.9 µs | 66.3 µs |
+| NSAttributedString | 1.49 ms | 1.48 ms | 1.69 ms |
 
-### Medium — 3.7 KB
-
-| Parser | Average | Median | P95 |
-|--------|---------|--------|-----|
-| Raw CLexbor | 18.3 µs | 17.1 µs | 24.0 µs |
-| HTMLParser | 33.8 µs | 33.0 µs | 41.3 µs |
-| JustHTML | 250 µs | 242 µs | 282 µs |
-| SwiftSoup | 337 µs | 333 µs | 371 µs |
-| BonMot | 378 µs | 372 µs | 429 µs |
-| NSAttributedString | 8.78 ms | 8.79 ms | 9.19 ms |
-
-### Large — 82.5 KB
+### Medium — 3.6 KB
 
 | Parser | Average | Median | P95 |
 |--------|---------|--------|-----|
-| Raw CLexbor | 176 µs | 174 µs | 199 µs |
-| HTMLParser | 366 µs | 356 µs | 431 µs |
-| JustHTML | 3.56 ms | 3.55 ms | 3.69 ms |
-| SwiftSoup | 3.69 ms | 3.68 ms | 3.88 ms |
-| BonMot | 4.16 ms | 4.11 ms | 4.49 ms |
-| NSAttributedString | 93.0 ms | 93.3 ms | 94.9 ms |
+| Raw CLexbor | 18.3 µs | 18.5 µs | 19.0 µs |
+| HTMLParser | 27.8 µs | 26.5 µs | 30.3 µs |
+| JustHTML | 255.6 µs | 254.5 µs | 270.0 µs |
+| SwiftSoup | 337.6 µs | 336.2 µs | 354.2 µs |
+| BonMot | 372.7 µs | 370.9 µs | 390.3 µs |
+| NSAttributedString | 8.07 ms | 7.96 ms | 9.56 ms |
+
+### Large — 80.6 KB
+
+| Parser | Average | Median | P95 |
+|--------|---------|--------|-----|
+| Raw CLexbor | 178.8 µs | 178.2 µs | 191.4 µs |
+| HTMLParser | 312.3 µs | 311.5 µs | 326.0 µs |
+| JustHTML | 3.66 ms | 3.66 ms | 3.72 ms |
+| SwiftSoup | 3.83 ms | 3.83 ms | 3.90 ms |
+| BonMot | 4.14 ms | 4.14 ms | 4.18 ms |
+| NSAttributedString | 92.18 ms | 91.90 ms | 95.05 ms |
 
 ### Summary
 
-On an 82 KB document, HTMLParser (lexbor) parses in **356 µs** — **10x faster** than SwiftSoup/JustHTML/BonMot and **260x faster** than NSAttributedString. Raw C API overhead for Swift AST conversion is ~2x.
+On an 81 KB document, HTMLParser (lexbor) parses in **311.5 µs** — **12x faster** than JustHTML/SwiftSoup/BonMot and **295x faster** than NSAttributedString. Raw C API overhead for Swift AST conversion is ~2x.
 
 ## Methodology
 
