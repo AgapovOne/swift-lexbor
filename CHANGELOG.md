@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-02-16
+
+### Added
+
+- DocC documentation catalog with landing page and Topics
+- `.spi.yml` for documentation hosting on Swift Package Index
+- Doc comments on all `HTMLVisitor` methods
+- Doc comments on `Sequence` conformance extensions
+
+### Changed
+
+- Dynamic SPI badges in README instead of static shields
+- CI: Swift 6.2 on macOS 26 (removed Swift 5.10 matrix — incompatible with macOS 15 SDK)
+
 ## [0.3.0] - 2026-02-16
 
 ### Added
