@@ -6,10 +6,10 @@ import CLexbor
 /// Tags `script`, `style`, and `template` are filtered out during parsing.
 ///
 /// ```swift
-/// let doc = HTMLParser.parse("<html><body><p>Hello</p></body></html>")
-/// let fragment = HTMLParser.parseFragment("<p>Hello</p>")
+/// let doc = SwiftLexbor.parse("<html><body><p>Hello</p></body></html>")
+/// let fragment = SwiftLexbor.parseFragment("<p>Hello</p>")
 /// ```
-public enum HTMLParser {
+public enum SwiftLexbor {
     /// Parses a complete HTML document including `<html>`, `<head>`, and `<body>` wrappers.
     ///
     /// Returns an empty ``HTMLDocument`` if the input is empty or parsing fails.

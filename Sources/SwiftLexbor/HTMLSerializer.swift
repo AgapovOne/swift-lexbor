@@ -1,7 +1,7 @@
 /// Converts AST nodes back to HTML strings.
 ///
 /// ```swift
-/// let doc = HTMLParser.parseFragment("<p>Hello <b>world</b></p>")
+/// let doc = SwiftLexbor.parseFragment("<p>Hello <b>world</b></p>")
 /// let html = HTMLSerializer.serialize(doc) // "<p>Hello <b>world</b></p>"
 /// ```
 public enum HTMLSerializer {

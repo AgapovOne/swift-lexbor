@@ -1,10 +1,10 @@
 import Testing
-@testable import HTMLParser
+@testable import SwiftLexbor
 
 // MARK: - US-005: Core Parser Tests
 
 @Test func parseFragmentSimpleParagraph() {
-    let doc = HTMLParser.parseFragment("<p>Hello</p>")
+    let doc = SwiftLexbor.parseFragment("<p>Hello</p>")
 
     #expect(doc.children.count == 1)
     guard case .element(let p) = doc.children[0] else {
@@ -21,7 +21,7 @@ import Testing
 }
 
 @Test func parseFragmentNestedInline() {
-    let doc = HTMLParser.parseFragment("<p><b>bold <i>and italic</i></b></p>")
+    let doc = SwiftLexbor.parseFragment("<p><b>bold <i>and italic</i></b></p>")
 
     #expect(doc.children.count == 1)
     guard case .element(let p) = doc.children[0] else {
@@ -58,7 +58,7 @@ import Testing
 }
 
 @Test func parseFragmentAttributes() {
-    let doc = HTMLParser.parseFragment("<a href=\"url\" class=\"link\">text</a>")
+    let doc = SwiftLexbor.parseFragment("<a href=\"url\" class=\"link\">text</a>")
 
     #expect(doc.children.count == 1)
     guard case .element(let a) = doc.children[0] else {
@@ -77,7 +77,7 @@ import Testing
 }
 
 @Test func parseFragmentBooleanAttribute() {
-    let doc = HTMLParser.parseFragment("<input disabled>")
+    let doc = SwiftLexbor.parseFragment("<input disabled>")
 
     #expect(doc.children.count == 1)
     guard case .element(let input) = doc.children[0] else {
@@ -90,7 +90,7 @@ import Testing
 }
 
 @Test func parseEmptyValueAttributeDistinctFromBoolean() {
-    let doc = HTMLParser.parseFragment("<input value=\"\" disabled>")
+    let doc = SwiftLexbor.parseFragment("<input value=\"\" disabled>")
 
     #expect(doc.children.count == 1)
     guard case .element(let input) = doc.children[0] else {
@@ -105,7 +105,7 @@ import Testing
 @Test func parseFragmentHeadings() {
     for level in 1...6 {
         let html = "<h\(level)>Heading</h\(level)>"
-        let doc = HTMLParser.parseFragment(html)
+        let doc = SwiftLexbor.parseFragment(html)
 
         #expect(doc.children.count == 1)
         guard case .element(let heading) = doc.children[0] else {
@@ -117,7 +117,7 @@ import Testing
 }
 
 @Test func parseFragmentUnorderedList() {
-    let doc = HTMLParser.parseFragment("<ul><li>item</li></ul>")
+    let doc = SwiftLexbor.parseFragment("<ul><li>item</li></ul>")
 
     #expect(doc.children.count == 1)
     guard case .element(let ul) = doc.children[0] else {
@@ -141,7 +141,7 @@ import Testing
 }
 
 @Test func parseFragmentOrderedList() {
-    let doc = HTMLParser.parseFragment("<ol><li>item</li></ol>")
+    let doc = SwiftLexbor.parseFragment("<ol><li>item</li></ol>")
 
     #expect(doc.children.count == 1)
     guard case .element(let ol) = doc.children[0] else {
@@ -159,7 +159,7 @@ import Testing
 }
 
 @Test func parseFragmentTableWithImplicitTbody() {
-    let doc = HTMLParser.parseFragment("<table><tr><td>cell</td></tr></table>")
+    let doc = SwiftLexbor.parseFragment("<table><tr><td>cell</td></tr></table>")
 
     #expect(doc.children.count == 1)
     guard case .element(let table) = doc.children[0] else {
@@ -197,15 +197,15 @@ import Testing
 }
 
 @Test func parseEmptyString() {
-    let doc = HTMLParser.parseFragment("")
+    let doc = SwiftLexbor.parseFragment("")
     #expect(doc.children.isEmpty)
 
-    let doc2 = HTMLParser.parse("")
+    let doc2 = SwiftLexbor.parse("")
     #expect(doc2.children.isEmpty)
 }
 
 @Test func parseInvalidHTMLDoesNotCrash() {
-    let doc = HTMLParser.parseFragment("<p>unclosed<p>another")
+    let doc = SwiftLexbor.parseFragment("<p>unclosed<p>another")
 
     // Should not crash. Lexbor handles error recovery.
     // Both <p> tags should be present as separate elements.
@@ -225,7 +225,7 @@ import Testing
 // MARK: - US-006: Advanced Parser Tests
 
 @Test func parseHTMLEntities() {
-    let doc = HTMLParser.parseFragment("<p>&amp; &#60; &#x3C;</p>")
+    let doc = SwiftLexbor.parseFragment("<p>&amp; &#60; &#x3C;</p>")
 
     #expect(doc.children.count == 1)
     guard case .element(let p) = doc.children[0] else {
@@ -240,7 +240,7 @@ import Testing
 }
 
 @Test func parseVoidElements() {
-    let doc = HTMLParser.parseFragment("<br><hr>")
+    let doc = SwiftLexbor.parseFragment("<br><hr>")
 
     #expect(doc.children.count == 2)
     guard case .element(let br) = doc.children[0] else {
@@ -260,7 +260,7 @@ import Testing
 
 @Test func parseSemanticContainers() {
     for tag in ["article", "section", "main"] {
-        let doc = HTMLParser.parseFragment("<\(tag)>content</\(tag)>")
+        let doc = SwiftLexbor.parseFragment("<\(tag)>content</\(tag)>")
 
         #expect(doc.children.count == 1)
         guard case .element(let el) = doc.children[0] else {
@@ -272,7 +272,7 @@ import Testing
 }
 
 @Test func parsePrePreservesWhitespace() {
-    let doc = HTMLParser.parseFragment("<pre>  spaces  \n  preserved  </pre>")
+    let doc = SwiftLexbor.parseFragment("<pre>  spaces  \n  preserved  </pre>")
 
     #expect(doc.children.count == 1)
     guard case .element(let pre) = doc.children[0] else {
@@ -289,7 +289,7 @@ import Testing
 }
 
 @Test func parseComment() {
-    let doc = HTMLParser.parseFragment("<!-- comment -->")
+    let doc = SwiftLexbor.parseFragment("<!-- comment -->")
 
     #expect(doc.children.count == 1)
     guard case .comment(let text) = doc.children[0] else {
@@ -300,7 +300,7 @@ import Testing
 }
 
 @Test func parseScriptAndStyleSkipped() {
-    let doc = HTMLParser.parseFragment("<div><script>alert(1)</script><p>visible</p></div>")
+    let doc = SwiftLexbor.parseFragment("<div><script>alert(1)</script><p>visible</p></div>")
 
     #expect(doc.children.count == 1)
     guard case .element(let div) = doc.children[0] else {
@@ -316,7 +316,7 @@ import Testing
     #expect(p.tagName == "p")
 
     // Also test style
-    let doc2 = HTMLParser.parseFragment("<div><style>body{}</style><p>visible</p></div>")
+    let doc2 = SwiftLexbor.parseFragment("<div><style>body{}</style><p>visible</p></div>")
     guard case .element(let div2) = doc2.children[0] else {
         Issue.record("Expected div element")
         return
@@ -330,7 +330,7 @@ import Testing
 }
 
 @Test func parseFragmentNoWrappers() {
-    let doc = HTMLParser.parseFragment("<p>Hello</p>")
+    let doc = SwiftLexbor.parseFragment("<p>Hello</p>")
 
     // Fragment should have no html/head/body wrappers
     for child in doc.children {
@@ -349,7 +349,7 @@ import Testing
 }
 
 @Test func parseFullDocumentIncludesWrappers() {
-    let doc = HTMLParser.parse("<html><body><p>Hi</p></body></html>")
+    let doc = SwiftLexbor.parse("<html><body><p>Hi</p></body></html>")
 
     // Full document should include html/head/body in tree
     #expect(!doc.children.isEmpty)
@@ -369,14 +369,14 @@ import Testing
 
 @Test func parseEquatable() {
     let html = "<div><p>Hello <b>world</b></p></div>"
-    let doc1 = HTMLParser.parseFragment(html)
-    let doc2 = HTMLParser.parseFragment(html)
+    let doc1 = SwiftLexbor.parseFragment(html)
+    let doc2 = SwiftLexbor.parseFragment(html)
 
     #expect(doc1 == doc2)
 }
 
 @Test func textContentExtractsNestedText() {
-    let doc = HTMLParser.parseFragment("<p>Hello <b>bold <i>and italic</i></b> world</p>")
+    let doc = SwiftLexbor.parseFragment("<p>Hello <b>bold <i>and italic</i></b> world</p>")
 
     guard case .element(let p) = doc.children[0] else {
         Issue.record("Expected p element")
@@ -387,8 +387,8 @@ import Testing
 
 @Test func parseHashable() {
     let html = "<div><p>Hello <b>world</b></p></div>"
-    let doc1 = HTMLParser.parseFragment(html)
-    let doc2 = HTMLParser.parseFragment(html)
+    let doc1 = SwiftLexbor.parseFragment(html)
+    let doc2 = SwiftLexbor.parseFragment(html)
 
     #expect(doc1.hashValue == doc2.hashValue)
 }
@@ -423,7 +423,7 @@ import Testing
         let html = voidTags.contains(tag)
             ? "<\(tag)>"
             : "<\(tag)>content</\(tag)>"
-        let doc = HTMLParser.parseFragment(html)
+        let doc = SwiftLexbor.parseFragment(html)
 
         guard case .element(let el) = doc.children.first(where: {
             if case .element(let e) = $0 { return e.tagName == tag }
@@ -447,7 +447,7 @@ import Testing
     ]
 
     for (tag, html, path) in tableChildren {
-        let doc = HTMLParser.parseFragment(html)
+        let doc = SwiftLexbor.parseFragment(html)
         var node: HTMLNode? = doc.children.first
         for step in path {
             guard case .element(let el) = node else {
@@ -461,7 +461,7 @@ import Testing
 }
 
 @Test func parseCustomElement() {
-    let doc = HTMLParser.parseFragment(
+    let doc = SwiftLexbor.parseFragment(
         "<my-widget data-id=\"42\"><x-button>Click</x-button></my-widget>"
     )
 
@@ -483,7 +483,7 @@ import Testing
 }
 
 @Test func parseTemplateSkipped() {
-    let doc = HTMLParser.parseFragment(
+    let doc = SwiftLexbor.parseFragment(
         "<div><template><p>hidden</p></template><p>visible</p></div>"
     )
 
@@ -503,7 +503,7 @@ import Testing
 }
 
 @Test func parseUnicodeContent() {
-    let doc = HTMLParser.parseFragment(
+    let doc = SwiftLexbor.parseFragment(
         "<p lang=\"ru\" data-emoji=\"🌍\">Привет мир! 你好世界 🎉</p>"
     )
 
@@ -529,7 +529,7 @@ import Testing
     }
     html += "</div>"
 
-    let doc = HTMLParser.parseFragment(html)
+    let doc = SwiftLexbor.parseFragment(html)
 
     #expect(doc.children.count == 1)
     guard case .element(let div) = doc.children[0] else {
@@ -560,7 +560,7 @@ import Testing
     let closing = (1...depth).map { _ in "</div>" }.joined()
     let html = "\(opening)<p>deep</p>\(closing)"
 
-    let doc = HTMLParser.parseFragment(html)
+    let doc = SwiftLexbor.parseFragment(html)
 
     // Walk down to the innermost element
     var current = doc.children.first
@@ -589,7 +589,7 @@ import Testing
     }
     html += "</ul>"
 
-    let doc = HTMLParser.parseFragment(html)
+    let doc = SwiftLexbor.parseFragment(html)
 
     guard case .element(let ul) = doc.children[0] else {
         Issue.record("Expected ul element")
@@ -619,7 +619,7 @@ import Testing
         func visitText(_ text: String) -> String? { nil }
     }
 
-    let doc = HTMLParser.parseFragment("<p><b>bold</b> and <strong>strong</strong></p>")
+    let doc = SwiftLexbor.parseFragment("<p><b>bold</b> and <strong>strong</strong></p>")
     let results = doc.accept(visitor: BoldCollector()).compactMap { $0 }
     #expect(results == ["boldstrong"])
 }
@@ -634,7 +634,7 @@ import Testing
         func visitText(_ text: String) -> String? { nil }
     }
 
-    let doc = HTMLParser.parseFragment("<i>italic</i><em>emphasis</em>")
+    let doc = SwiftLexbor.parseFragment("<i>italic</i><em>emphasis</em>")
     let results = doc.accept(visitor: ItalicCollector()).compactMap { $0 }
     #expect(results == ["italic", "emphasis"])
 }
@@ -648,7 +648,7 @@ import Testing
         func visitText(_ text: String) -> String? { nil }
     }
 
-    let doc = HTMLParser.parseFragment("<p>Use <code>foo()</code> here</p>")
+    let doc = SwiftLexbor.parseFragment("<p>Use <code>foo()</code> here</p>")
     let results = doc.accept(visitor: CodeCollector()).compactMap { $0 }
     #expect(results == ["foo()"])
 }
@@ -663,7 +663,7 @@ import Testing
         func visitText(_ text: String) -> String? { nil }
     }
 
-    let doc = HTMLParser.parseFragment("<s>s</s><del>del</del><strike>strike</strike>")
+    let doc = SwiftLexbor.parseFragment("<s>s</s><del>del</del><strike>strike</strike>")
     let results = doc.accept(visitor: StrikeCollector()).compactMap { $0 }
     #expect(results == ["s", "del", "strike"])
 }
@@ -678,7 +678,7 @@ import Testing
         func visitText(_ text: String) -> String? { nil }
     }
 
-    let doc = HTMLParser.parseFragment("<u>underline</u><ins>inserted</ins>")
+    let doc = SwiftLexbor.parseFragment("<u>underline</u><ins>inserted</ins>")
     let results = doc.accept(visitor: UnderlineCollector()).compactMap { $0 }
     #expect(results == ["underline", "inserted"])
 }
@@ -693,7 +693,7 @@ import Testing
         func visitText(_ text: String) -> String? { nil }
     }
 
-    let doc = HTMLParser.parseFragment("<p>H<sub>2</sub>O x<sup>2</sup></p>")
+    let doc = SwiftLexbor.parseFragment("<p>H<sub>2</sub>O x<sup>2</sup></p>")
     let results = doc.accept(visitor: SubSupCollector()).compactMap { $0 }.filter { !$0.isEmpty }
     #expect(results == ["sub:2,sup:2"])
 }
@@ -709,7 +709,7 @@ import Testing
         func visitText(_ text: String) -> String? { nil }
     }
 
-    let doc = HTMLParser.parseFragment("<img src=\"photo.jpg\" alt=\"A photo\">")
+    let doc = SwiftLexbor.parseFragment("<img src=\"photo.jpg\" alt=\"A photo\">")
     let results = doc.accept(visitor: ImageCollector()).compactMap { $0 }
     #expect(results == ["img:photo.jpg:A photo"])
 }
@@ -723,7 +723,7 @@ import Testing
         func visitText(_ text: String) -> Int? { nil }
     }
 
-    let doc = HTMLParser.parseFragment("<p>line1<br>line2<br>line3</p>")
+    let doc = SwiftLexbor.parseFragment("<p>line1<br>line2<br>line3</p>")
     let count = doc.accept(visitor: BrCollector()).compactMap { $0 }.reduce(0, +)
     #expect(count == 2)
 }
@@ -731,7 +731,7 @@ import Testing
 // MARK: - Sequence Conformance Tests
 
 @Test func documentSequenceConformance() {
-    let doc = HTMLParser.parseFragment("<p>one</p><p>two</p><p>three</p>")
+    let doc = SwiftLexbor.parseFragment("<p>one</p><p>two</p><p>three</p>")
 
     let tags = doc.compactMap { node -> String? in
         guard case .element(let el) = node else { return nil }
@@ -741,7 +741,7 @@ import Testing
 }
 
 @Test func elementSequenceConformance() {
-    let doc = HTMLParser.parseFragment("<ul><li>a</li><li>b</li></ul>")
+    let doc = SwiftLexbor.parseFragment("<ul><li>a</li><li>b</li></ul>")
 
     guard case .element(let ul) = doc.children.first else {
         Issue.record("Expected ul element")
@@ -758,7 +758,7 @@ import Testing
 // MARK: - hasAttribute Tests
 
 @Test func hasAttributeReturnsTrueForBooleanAttribute() {
-    let doc = HTMLParser.parseFragment("<input disabled>")
+    let doc = SwiftLexbor.parseFragment("<input disabled>")
     guard case .element(let input) = doc.children.first else {
         Issue.record("Expected input element")
         return
@@ -768,7 +768,7 @@ import Testing
 }
 
 @Test func hasAttributeReturnsTrueForValueAttribute() {
-    let doc = HTMLParser.parseFragment("<a href=\"/\">link</a>")
+    let doc = SwiftLexbor.parseFragment("<a href=\"/\">link</a>")
     guard case .element(let a) = doc.children.first else {
         Issue.record("Expected a element")
         return
@@ -780,31 +780,31 @@ import Testing
 // MARK: - Serializer Tests
 
 @Test func serializeSimpleParagraph() {
-    let doc = HTMLParser.parseFragment("<p>Hello</p>")
+    let doc = SwiftLexbor.parseFragment("<p>Hello</p>")
     let html = HTMLSerializer.serialize(doc)
     #expect(html == "<p>Hello</p>")
 }
 
 @Test func serializeNestedElements() {
-    let doc = HTMLParser.parseFragment("<p>Hello <b>world</b></p>")
+    let doc = SwiftLexbor.parseFragment("<p>Hello <b>world</b></p>")
     let html = HTMLSerializer.serialize(doc)
     #expect(html == "<p>Hello <b>world</b></p>")
 }
 
 @Test func serializeVoidElements() {
-    let doc = HTMLParser.parseFragment("<br><hr>")
+    let doc = SwiftLexbor.parseFragment("<br><hr>")
     let html = HTMLSerializer.serialize(doc)
     #expect(html == "<br><hr>")
 }
 
 @Test func serializeAttributes() {
-    let doc = HTMLParser.parseFragment("<a href=\"/page\" class=\"link\">text</a>")
+    let doc = SwiftLexbor.parseFragment("<a href=\"/page\" class=\"link\">text</a>")
     let html = HTMLSerializer.serialize(doc)
     #expect(html == "<a class=\"link\" href=\"/page\">text</a>")
 }
 
 @Test func serializeBooleanAttributes() {
-    let doc = HTMLParser.parseFragment("<input disabled>")
+    let doc = SwiftLexbor.parseFragment("<input disabled>")
     let html = HTMLSerializer.serialize(doc)
     #expect(html == "<input disabled>")
 }
@@ -831,14 +831,14 @@ import Testing
 
 @Test func serializeRoundtrip() {
     let input = "<div><p>Hello <b>bold</b> and <i>italic</i></p><ul><li>one</li><li>two</li></ul></div>"
-    let doc1 = HTMLParser.parseFragment(input)
+    let doc1 = SwiftLexbor.parseFragment(input)
     let html = HTMLSerializer.serialize(doc1)
-    let doc2 = HTMLParser.parseFragment(html)
+    let doc2 = SwiftLexbor.parseFragment(html)
     #expect(doc1 == doc2)
 }
 
 @Test func serializeImgWithAttributes() {
-    let doc = HTMLParser.parseFragment("<img src=\"photo.jpg\" alt=\"A photo\">")
+    let doc = SwiftLexbor.parseFragment("<img src=\"photo.jpg\" alt=\"A photo\">")
     let html = HTMLSerializer.serialize(doc)
     #expect(html == "<img alt=\"A photo\" src=\"photo.jpg\">")
 }
@@ -847,7 +847,7 @@ import Testing
     let attrs = (1...12).map { "data-attr\($0)=\"value\($0)\"" }.joined(separator: " ")
     let html = "<div id=\"main\" class=\"container\" \(attrs)>content</div>"
 
-    let doc = HTMLParser.parseFragment(html)
+    let doc = SwiftLexbor.parseFragment(html)
 
     guard case .element(let div) = doc.children[0] else {
         Issue.record("Expected div element")

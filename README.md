@@ -12,7 +12,7 @@ Built on [lexbor](https://github.com/lexbor/lexbor) v2.6.0. Parses HTML into imm
 
 | Parser | Time | Relative |
 |--------|------|----------|
-| **HTMLParser** | **312 µs** | **1x** |
+| **SwiftLexbor** | **312 µs** | **1x** |
 | JustHTML | 3.66 ms | 12x slower |
 | SwiftSoup | 3.83 ms | 12x slower |
 | BonMot | 4.14 ms | 13x slower |
@@ -23,9 +23,9 @@ Built on [lexbor](https://github.com/lexbor/lexbor) v2.6.0. Parses HTML into imm
 ## Quick Start
 
 ```swift
-import HTMLParser
+import SwiftLexbor
 
-let doc = HTMLParser.parseFragment("<p>Hello <b>world</b></p>")
+let doc = SwiftLexbor.parseFragment("<p>Hello <b>world</b></p>")
 
 for node in doc.children {
     switch node {
@@ -46,7 +46,7 @@ dependencies: [
 ],
 targets: [
     .target(name: "YourTarget", dependencies: [
-        .product(name: "HTMLParser", package: "swift-lexbor"),
+        .product(name: "SwiftLexbor", package: "swift-lexbor"),
     ]),
 ]
 ```
@@ -83,10 +83,10 @@ bytes.withUnsafeBufferPointer { buffer in
 
 ```swift
 // Fragment — no html/head/body wrappers
-let doc = HTMLParser.parseFragment("<div><p>text</p></div>")
+let doc = SwiftLexbor.parseFragment("<div><p>text</p></div>")
 
 // Full document — includes html/head/body
-let fullDoc = HTMLParser.parse("<html><body><p>text</p></body></html>")
+let fullDoc = SwiftLexbor.parse("<html><body><p>text</p></body></html>")
 ```
 
 ### Visitor Pattern
@@ -142,7 +142,7 @@ Inline formatting methods: `visitBold` (`b`/`strong`), `visitItalic` (`i`/`em`),
 ### Serialization
 
 ```swift
-let doc = HTMLParser.parseFragment("<p>Hello <b>world</b></p>")
+let doc = SwiftLexbor.parseFragment("<p>Hello <b>world</b></p>")
 let html = HTMLSerializer.serialize(doc) // "<p>Hello <b>world</b></p>"
 ```
 
@@ -153,7 +153,7 @@ Handles void elements, boolean attributes, HTML entity escaping, and sorted attr
 `HTMLDocument` and `HTMLElement` conform to `Sequence`, so you can iterate directly:
 
 ```swift
-let doc = HTMLParser.parseFragment("<p>one</p><p>two</p>")
+let doc = SwiftLexbor.parseFragment("<p>one</p><p>two</p>")
 
 for node in doc {
     if case .element(let el) = node {
@@ -229,7 +229,7 @@ struct AttributedStringBuilder: HTMLVisitor {
 }
 
 // Usage:
-let doc = HTMLParser.parseFragment("<p>Hello <b>world</b> and <a href=\"https://example.com\">link</a></p>")
+let doc = SwiftLexbor.parseFragment("<p>Hello <b>world</b> and <a href=\"https://example.com\">link</a></p>")
 let builder = AttributedStringBuilder()
 let attributed = doc.children.map { $0.accept(visitor: builder) }.reduce(AttributedString(), +)
 ```

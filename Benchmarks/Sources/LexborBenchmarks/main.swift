@@ -1,5 +1,5 @@
 import Foundation
-import HTMLParser
+import SwiftLexbor
 import CLexbor
 import SwiftSoup
 import BonMot
@@ -56,9 +56,9 @@ func benchmark(
 
 // MARK: - Parsers
 
-func benchmarkHTMLParser(html: String, docName: String) -> BenchmarkResult {
-    benchmark(name: "HTMLParser", document: docName) {
-        _ = HTMLParser.parseFragment(html)
+func benchmarkSwiftLexbor(html: String, docName: String) -> BenchmarkResult {
+    benchmark(name: "SwiftLexbor", document: docName) {
+        _ = SwiftLexbor.parseFragment(html)
     }
 }
 
@@ -200,7 +200,7 @@ func generateReadme(documentResults: [(doc: DocumentSet, sizeBytes: Int, results
 
         | Parser | Description |
         |--------|-------------|
-        | **HTMLParser** | swift-lexbor Swift wrapper (parse + AST conversion) |
+        | **SwiftLexbor** | swift-lexbor Swift wrapper (parse + AST conversion) |
         | **Raw CLexbor** | Direct lexbor C API call (parse only, no AST) |
         | **SwiftSoup** | Pure Swift HTML parser (JSoup port) |
         | **BonMot** | XMLParser-based attributed string builder |
@@ -229,7 +229,7 @@ func generateReadme(documentResults: [(doc: DocumentSet, sizeBytes: Int, results
 
     // Summary based on the largest document
     if let (_, sizeBytes, results) = documentResults.last {
-        if let htmlParser = results.first(where: { $0.name == "HTMLParser" }),
+        if let htmlParser = results.first(where: { $0.name == "SwiftLexbor" }),
            let rawCLexbor = results.first(where: { $0.name == "Raw CLexbor" }) {
 
             let sizeKB = Int(round(Double(sizeBytes) / 1024.0))
@@ -253,7 +253,7 @@ func generateReadme(documentResults: [(doc: DocumentSet, sizeBytes: Int, results
             let article = [8, 11, 18].contains(sizeKB) || (80...89).contains(sizeKB) ? "an" : "a"
 
             md += "\n### Summary\n\n"
-            md += "On \(article) \(sizeKB) KB document, HTMLParser (lexbor) parses in **\(formatTime(htmlParser.median))**"
+            md += "On \(article) \(sizeKB) KB document, SwiftLexbor (lexbor) parses in **\(formatTime(htmlParser.median))**"
             if !comparisons.isEmpty {
                 md += " — " + comparisons.joined(separator: " and ")
             }
@@ -308,7 +308,7 @@ let documents: [DocumentSet] = [
     DocumentSet(name: "Large (50+KB)", html: TestDocuments.large, xml: TestDocuments.largeXML),
 ]
 
-print("HTML Parser Benchmarks")
+print("SwiftLexbor Benchmarks")
 print("======================")
 print("Iterations: 100, Warmup: 10\n")
 
@@ -321,7 +321,7 @@ for doc in documents {
 
     var results: [BenchmarkResult] = []
 
-    results.append(benchmarkHTMLParser(html: doc.html, docName: doc.name))
+    results.append(benchmarkSwiftLexbor(html: doc.html, docName: doc.name))
     results.append(benchmarkRawCLexbor(html: doc.html, docName: doc.name))
     results.append(benchmarkSwiftSoup(html: doc.html, docName: doc.name))
     results.append(benchmarkJustHTML(html: doc.html, docName: doc.name))

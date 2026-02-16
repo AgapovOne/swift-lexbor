@@ -15,7 +15,7 @@ let package = Package(
         .executableTarget(
             name: "LexborBenchmarks",
             dependencies: [
-                .product(name: "HTMLParser", package: "swift-lexbor"),
+                .product(name: "SwiftLexbor", package: "swift-lexbor"),
                 .product(name: "CLexbor", package: "swift-lexbor"),
                 "SwiftSoup",
                 "BonMot",

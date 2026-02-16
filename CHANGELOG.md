@@ -23,8 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - HTML5 parsing powered by lexbor v2.6.0
-- `HTMLParser.parse()` for full document parsing with `<html>`, `<head>`, `<body>` wrappers
-- `HTMLParser.parseFragment()` for parsing partial HTML without wrappers
+- `SwiftLexbor.parse()` for full document parsing with `<html>`, `<head>`, `<body>` wrappers
+- `SwiftLexbor.parseFragment()` for parsing partial HTML without wrappers
 - Immutable AST: `HTMLDocument`, `HTMLNode`, `HTMLElement`
 - `HTMLVisitor` protocol with semantic dispatch (headings, links, lists, tables, etc.)
 - Automatic HTML entity decoding (`&amp;`, `&#60;`, `&#x3C;`)

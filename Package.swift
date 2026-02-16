@@ -7,8 +7,8 @@ let package = Package(
     platforms: [.iOS(.v13), .macOS(.v10_15)],
     products: [
         .library(
-            name: "HTMLParser",
-            targets: ["HTMLParser"]
+            name: "SwiftLexbor",
+            targets: ["SwiftLexbor"]
         ),
         .library(
             name: "CLexbor",
@@ -25,12 +25,12 @@ let package = Package(
             ]
         ),
         .target(
-            name: "HTMLParser",
+            name: "SwiftLexbor",
             dependencies: ["CLexbor"]
         ),
         .testTarget(
-            name: "HTMLParserTests",
-            dependencies: ["HTMLParser"]
+            name: "SwiftLexborTests",
+            dependencies: ["SwiftLexbor"]
         ),
     ]
 )
