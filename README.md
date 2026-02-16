@@ -6,7 +6,7 @@
 
 Fast HTML parser for Swift. **12x faster** than SwiftSoup, **295x faster** than NSAttributedString.
 
-Built on [lexbor](https://github.com/lexbor/lexbor) v2.6.0. Parses HTML into immutable Swift value types.
+Built on [lexbor](https://github.com/lexbor/lexbor) v2.6.0. Parses HTML into immutable Swift value types. [Why SwiftLexbor over WKWebView, NSAttributedString, and others? →](WHY.md)
 
 ### Parsing 80 KB HTML (median)
 
