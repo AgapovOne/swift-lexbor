@@ -237,6 +237,20 @@ let attributed = doc.children.map { $0.accept(visitor: builder) }.reduce(Attribu
 </details>
 
 <details>
+<summary>SwiftUI example</summary>
+
+Parse HTML once, render the AST in SwiftUI.
+
+```swift
+let document = SwiftLexbor.parseFragment(html)
+HTMLDocView(document)
+```
+
+Full working example with headings, blockquotes, inline formatting, and tappable links → [Example/](Example/)
+
+</details>
+
+<details>
 <summary>AST types reference</summary>
 
 All types are `Equatable`, `Hashable`, and `Sendable`.
