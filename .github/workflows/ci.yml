@@ -9,11 +9,14 @@ on:
 jobs:
   test:
     runs-on: macos-15
+    strategy:
+      matrix:
+        swift-version: ["5.9", "6.2"]
     steps:
       - uses: actions/checkout@v4
       - uses: swift-actions/setup-swift@v2
         with:
-          swift-version: "6.2"
+          swift-version: ${{ matrix.swift-version }}
       - name: Build
         run: swift build
       - name: Test
