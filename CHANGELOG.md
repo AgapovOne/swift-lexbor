@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-02-16
+
+### Added
+
+- SwiftUI example app in `Example/` — renders HTML as native SwiftUI views
+
+### Changed
+
+- **Breaking:** Renamed module from `HTMLParser` to `SwiftLexbor` (`import SwiftLexbor` instead of `import HTMLParser`)
+- Lowered minimum Swift version from 6.2 to 5.9
+
 ## [0.2.0] - 2026-02-14
 
 ### Added
