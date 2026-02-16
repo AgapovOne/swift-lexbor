@@ -1,7 +1,7 @@
 # swift-lexbor
 
-[![Swift 6.2+](https://img.shields.io/badge/Swift-6.2+-F05138.svg)](https://swift.org)
-[![Platforms](https://img.shields.io/badge/Platforms-iOS%20|%20macOS-blue.svg)]()
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FAgapovOne%2Fswift-lexbor%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/AgapovOne/swift-lexbor)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FAgapovOne%2Fswift-lexbor%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/AgapovOne/swift-lexbor)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](Sources/CLexbor/LICENSE)
 
 Fast HTML parser for Swift. **12x faster** than SwiftSoup, **295x faster** than NSAttributedString.
@@ -293,7 +293,7 @@ See [Benchmarks/](Benchmarks/) for full results and methodology.
 
 ## Requirements
 
-- Swift 6.2+
+- Swift 5.10+
 - iOS 13+ / macOS 10.15+
 
 ## License
