@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Breaking:** Renamed module from `HTMLParser` to `SwiftLexbor` (`import SwiftLexbor` instead of `import HTMLParser`)
-- Lowered minimum Swift version from 6.2 to 5.9
+- Lowered minimum Swift version from 6.2 to 5.10
 
 ## [0.2.0] - 2026-02-14
 
