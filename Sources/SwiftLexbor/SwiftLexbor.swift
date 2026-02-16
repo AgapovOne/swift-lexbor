@@ -39,6 +39,10 @@ public enum SwiftLexbor {
     ///
     /// Use this for parsing partial HTML like rich text content or user input.
     /// Returns an empty ``HTMLDocument`` if the input is empty or parsing fails.
+    ///
+    /// > Note: If the fragment contains `<html>` or `<body>` tags, lexbor will parse
+    /// > them as part of the fragment context. Use ``parse(_:)`` for full documents.
+    ///
     /// - Parameter html: HTML fragment string to parse.
     /// - Returns: Parsed document tree containing only the fragment nodes.
     public static func parseFragment(_ html: String) -> HTMLDocument {

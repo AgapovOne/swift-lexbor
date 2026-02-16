@@ -17,27 +17,47 @@
 public protocol HTMLVisitor {
     associatedtype Result
 
+    /// Visits `h1`–`h6` elements. `level` is 1–6.
     func visitHeading(_ element: HTMLElement, level: Int) -> Result
+    /// Visits `p` elements.
     func visitParagraph(_ element: HTMLElement) -> Result
+    /// Visits `a` elements. `href` is `nil` when the attribute is missing.
     func visitLink(_ element: HTMLElement, href: String?) -> Result
+    /// Visits `ul` or `ol` elements. `ordered` is `true` for `ol`.
     func visitList(_ element: HTMLElement, ordered: Bool) -> Result
+    /// Visits `li` elements.
     func visitListItem(_ element: HTMLElement) -> Result
+    /// Visits `blockquote` elements.
     func visitBlockquote(_ element: HTMLElement) -> Result
+    /// Visits `pre` elements (code blocks).
     func visitCodeBlock(_ element: HTMLElement) -> Result
+    /// Visits `table` elements.
     func visitTable(_ element: HTMLElement) -> Result
+    /// Visits `b` and `strong` elements.
     func visitBold(_ element: HTMLElement) -> Result
+    /// Visits `i` and `em` elements.
     func visitItalic(_ element: HTMLElement) -> Result
+    /// Visits inline `code` elements.
     func visitCode(_ element: HTMLElement) -> Result
+    /// Visits `u` and `ins` elements.
     func visitUnderline(_ element: HTMLElement) -> Result
+    /// Visits `s`, `del`, and `strike` elements.
     func visitStrikethrough(_ element: HTMLElement) -> Result
+    /// Visits `sub` elements.
     func visitSubscript(_ element: HTMLElement) -> Result
+    /// Visits `sup` elements.
     func visitSuperscript(_ element: HTMLElement) -> Result
+    /// Visits `img` elements. `src` and `alt` are `nil` when the attributes are missing.
     func visitImage(_ element: HTMLElement, src: String?, alt: String?) -> Result
+    /// Visits `br` elements.
     func visitLineBreak() -> Result
+    /// Visits `hr` elements.
     func visitHorizontalRule() -> Result
+    /// Visits text nodes.
     func visitText(_ text: String) -> Result
+    /// Visits comment nodes (`<!-- ... -->`).
     func visitComment(_ text: String) -> Result
-    /// Fallback for elements without a dedicated visit method.
+    /// Fallback for elements without a dedicated visit method (e.g. `div`, `span`, custom elements).
     func visitElement(_ element: HTMLElement) -> Result
 }
 

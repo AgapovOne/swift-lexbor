@@ -28,6 +28,8 @@ public struct HTMLElement: Equatable, Hashable, Sendable {
     }
 
     /// Concatenated text content of all descendant text nodes.
+    ///
+    /// Returns an empty string if the element has no text children.
     public var textContent: String {
         children.map { node in
             switch node {
