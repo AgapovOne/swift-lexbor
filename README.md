@@ -1,6 +1,24 @@
 # swift-lexbor
 
-Swift wrapper for [lexbor](https://github.com/nicktrandafil/lexbor) HTML parser. Parses HTML string into an immutable AST (value types). Built on lexbor v2.6.0 — one of the fastest HTML parsers available.
+[![Swift 6.2+](https://img.shields.io/badge/Swift-6.2+-F05138.svg)](https://swift.org)
+[![Platforms](https://img.shields.io/badge/Platforms-iOS%20|%20macOS-blue.svg)]()
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](Sources/CLexbor/LICENSE)
+
+Fast HTML parser for Swift. **12x faster** than SwiftSoup, **295x faster** than NSAttributedString.
+
+Built on [lexbor](https://github.com/lexbor/lexbor) v2.6.0. Parses HTML into immutable Swift value types.
+
+### Parsing 80 KB HTML (median)
+
+| Parser | Time | Relative |
+|--------|------|----------|
+| **HTMLParser** | **312 µs** | **1x** |
+| JustHTML | 3.66 ms | 12x slower |
+| SwiftSoup | 3.83 ms | 12x slower |
+| BonMot | 4.14 ms | 13x slower |
+| NSAttributedString | 91.9 ms | 295x slower |
+
+<sub>Apple M4 Max, macOS 26.2, Swift 6.2, release build. [Full results →](Benchmarks/)</sub>
 
 ## Quick Start
 
@@ -69,27 +87,6 @@ let doc = HTMLParser.parseFragment("<div><p>text</p></div>")
 
 // Full document — includes html/head/body
 let fullDoc = HTMLParser.parse("<html><body><p>text</p></body></html>")
-```
-
-### AST Types
-
-All types are `Equatable`, `Hashable`, and `Sendable`.
-
-```swift
-struct HTMLDocument { let children: [HTMLNode] }
-
-enum HTMLNode {
-    case element(HTMLElement)
-    case text(String)
-    case comment(String)
-}
-
-struct HTMLElement {
-    let tagName: String
-    let attributes: [String: String]
-    let children: [HTMLNode]
-    var textContent: String { get }
-}
 ```
 
 ### Visitor Pattern
@@ -171,9 +168,10 @@ let tags = doc.compactMap { node -> String? in
 }
 ```
 
-### Building an AttributedString Visitor
+<details>
+<summary>AttributedString visitor example</summary>
 
-Example visitor that converts HTML to `AttributedString`. Copy and customize for your needs:
+Converts HTML to `AttributedString`. Copy and customize for your needs:
 
 ```swift
 import Foundation
@@ -236,6 +234,32 @@ let builder = AttributedStringBuilder()
 let attributed = doc.children.map { $0.accept(visitor: builder) }.reduce(AttributedString(), +)
 ```
 
+</details>
+
+<details>
+<summary>AST types reference</summary>
+
+All types are `Equatable`, `Hashable`, and `Sendable`.
+
+```swift
+struct HTMLDocument { let children: [HTMLNode] }
+
+enum HTMLNode {
+    case element(HTMLElement)
+    case text(String)
+    case comment(String)
+}
+
+struct HTMLElement {
+    let tagName: String
+    let attributes: [String: String]
+    let children: [HTMLNode]
+    var textContent: String { get }
+}
+```
+
+</details>
+
 ### Parser Behavior
 
 - `script`, `style`, `template` tags are skipped
@@ -245,13 +269,13 @@ let attributed = doc.children.map { $0.accept(visitor: builder) }.reduce(Attribu
 
 ## Benchmarks
 
-Parsing performance compared to other Swift HTML parsers. See [Benchmarks/](Benchmarks/) for details and methodology.
-
 Run locally:
 
 ```bash
 swift run --package-path Benchmarks -c release
 ```
+
+See [Benchmarks/](Benchmarks/) for full results and methodology.
 
 ## Requirements
 
